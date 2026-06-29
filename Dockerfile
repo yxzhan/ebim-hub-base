@@ -29,14 +29,14 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install Isaacsim
+ENV ISAACSIM_VERSION="5.1.0"
 ENV ISAACSIM_PATH="/isaac-sim"
 ENV ISAACSIM_PYTHON_EXE="${ISAACSIM_PATH}/python.sh"
 RUN mkdir -p ${ISAACSIM_PATH} && \
     cd /tmp && \
-    wget --no-check-certificate https://downloads.isaacsim.nvidia.com/isaac-sim-standalone-6.0.1-linux-x86_64.zip && \
-    unzip /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip -d ${ISAACSIM_PATH} && \
-    rm /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip
-
+    wget --no-check-certificate https://downloads.isaacsim.nvidia.com/isaac-sim-standalone-${ISAACSIM_VERSION}-linux-x86_64.zip && \
+    unzip /tmp/isaac-sim-standalone-${ISAACSIM_VERSION}-linux-x86_64.zip -d ${ISAACSIM_PATH} && \
+    rm /tmp/isaac-sim-standalone-${ISAACSIM_VERSION}-linux-x86_64.zip
 
 WORKDIR ${HOME}
 ENV CODE_WORKING_DIRECTORY=${HOME}
