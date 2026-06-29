@@ -28,13 +28,14 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 # Install UV
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install IsaacLab
-WORKDIR /home
-RUN uv venv --python 3.12 --seed env_isaaclab && \
-    source env_isaaclab/bin/activate && \
-    uv pip install --upgrade pip && \
-    uv pip install "isaaclab[isaacsim,all]" --extra-index-url https://pypi.nvidia.com --index-strategy unsafe-best-match --prerelease=allow && \
-    uv pip install -U torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cu128
+# Install Isaacsim
+ENV ISAACSIM_PATH="/isaac-sim"
+ENV ISAACSIM_PYTHON_EXE="${ISAACSIM_PATH}/python.sh"
+RUN cd /tmp && \
+    wget wget --no-check-certificate https://downloads.isaacsim.nvidia.com/isaac-sim-standalone-6.0.1-linux-x86_64.zip && \
+    sudo unzip /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip -d ${ISAACSIM_PATH} && \
+    sudo chown ${NB_USER}:users -R ${ISAACSIM_PATH} && \
+    rm /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip
 
 
 WORKDIR ${HOME}
