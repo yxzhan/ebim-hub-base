@@ -31,10 +31,10 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 # Install Isaacsim
 ENV ISAACSIM_PATH="/isaac-sim"
 ENV ISAACSIM_PYTHON_EXE="${ISAACSIM_PATH}/python.sh"
-RUN cd /tmp && \
-    wget wget --no-check-certificate https://downloads.isaacsim.nvidia.com/isaac-sim-standalone-6.0.1-linux-x86_64.zip && \
-    sudo unzip /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip -d ${ISAACSIM_PATH} && \
-    sudo chown ${NB_USER}:users -R ${ISAACSIM_PATH} && \
+RUN mkdir -p ${ISAACSIM_PATH} && \
+    cd /tmp && \
+    wget --no-check-certificate https://downloads.isaacsim.nvidia.com/isaac-sim-standalone-6.0.1-linux-x86_64.zip && \
+    unzip /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip -d ${ISAACSIM_PATH} && \
     rm /tmp/isaac-sim-standalone-6.0.1-linux-x86_64.zip
 
 
