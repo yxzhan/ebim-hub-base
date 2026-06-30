@@ -81,4 +81,6 @@ The simulation was tested on the following Google Cloud compute configuration:
 
 The screen recording below shows the simulation running in real time on this configuration:
 
-https://github.com/user-attachments/assets/REPLACE_WITH_UPLOADED_VIDEO
+
+https://github.com/user-attachments/assets/55043da1-0b52-40e2-b13d-dae20a6af0af
+
