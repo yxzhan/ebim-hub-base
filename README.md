@@ -1,85 +1,84 @@
-# ebim-hub-base
+# EBiM Challenge on Google Cloud — User Guide
 
-Configuration for the **EBIM JupyterHub user pod**. This repo holds two things:
+This guide helps you access and run the Isaac Sim simulation environment for the EBiM Challenge, hosted as a JupyterHub service on Google Cloud.
 
-1. **The Docker image** for the user pod (`Dockerfile`), prebuilt and pushed manually to
-   [`intel4coro/ebimhub:latest`](https://hub.docker.com/r/intel4coro/ebimhub).
-2. **The home-directory files** (`.bashrc`, `env_init.sh`, `run_isaacsim.sh`) that live in
-   the pod's persistent home volume and set up / launch the runtime environment.
+---
 
-## Why dependencies aren't installed in the Dockerfile
+## Prerequisites
 
-In this JupyterHub deployment the user's home directory (`/home/jovyan`) is backed by a
-**persistent volume**. When the pod starts, that volume is mounted over `/home/jovyan`,
-which **shadows / clears anything the image baked into `$HOME` at build time**. As a result,
-heavy dependencies cannot be installed into the home directory from the `Dockerfile` — they
-would simply disappear once the volume is mounted.
+- A **GitHub account** (used for login)
+- A modern browser such as **Chrome / Edge** is recommended
+- A stable network connection (the simulation view is streamed live to your browser and is bandwidth-sensitive)
 
-So the split is:
+---
 
-- **System-level tools** (things that live *outside* `$HOME`) → installed in the `Dockerfile`.
-- **User-level dependencies** (things that live *inside* `$HOME`, e.g. Isaac Sim / Isaac Lab,
-  Python virtualenvs) → installed **once at runtime** via [`env_init.sh`](env_init.sh) into the
-  persistent home volume, where they survive pod restarts.
+## Steps
 
-## Repository layout
+### 1. Open the service
 
-| File                | Purpose                                                                                  |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| `Dockerfile`        | Builds the user pod image on top of `intel4coro/jupyter-ros2:jazzy-py3.12`.              |
-| `env_init.sh`       | One-time, in-pod setup: installs uv, the Python 3.11 env, Isaac Sim and Isaac Lab.       |
-| `run_isaacsim.sh`   | Launches Isaac Sim with the ROS 2 bridge configured.                                     |
-| `.bashrc`           | Shell config placed in the home directory (conda hook, `code` alias, etc.).              |
+Navigate to:
 
-## The Docker image
+👉 **https://ebim.aicor.dev/**
 
-The image (`intel4coro/ebimhub:latest`) adds the following on top of the
-[`jupyter-ros2`](https://github.com/IntEL4CoRo/jupyter-ros2) base:
+### 2. Sign in with GitHub
 
-- **git-lfs**
-- **VirtualGL 3.1.4** (GPU-accelerated remote rendering)
-- An upgraded **code-server**, plus the `git-graph`, `sysmonitor`, and
-  `vscode-remote-desktop` extensions
+On the login page, click **Sign in with GitHub** and authorize with your GitHub account.
 
-### Build & push
+> 💡 On first login, GitHub will ask you to authorize the application — click **Authorize** to continue.
 
-The image is **prebuilt and pushed manually** (it is not built by JupyterHub):
+### 3. Start your server
 
-```bash
-docker build -t intel4coro/ebimhub:latest .
-docker push intel4coro/ebimhub:latest
-```
+After signing in, click **Start My Server**.
 
-JupyterHub is then configured to spawn user pods from `intel4coro/ebimhub:latest`.
+> ⏳ **Please be patient.** The first launch pulls the container image and initializes the environment, so **it can take several minutes**. This is normal — do not refresh or close the page while it starts.
 
-## First-time setup inside the pod
+![](docs/2.png)
 
-After a user pod starts for the first time (or after the persistent volume is reset), run the
-setup script once from the home directory to populate the environment:
+### 4. Open the Virtual Desktop and a terminal and launch the scene
 
-```bash
-./env_init.sh
-```
+Once the server is ready, you will be taken to the **VS Code** interface.
 
-This installs [uv](https://docs.astral.sh/uv/), creates a Python 3.12 virtualenv
-(`env_isaaclab`), and installs:
+- In the left activity bar, click the **Virtual Desktop** button to open the graphical desktop view.
 
-- `isaacsim[all,extscache]==6.0.0.1`
-- `torch==2.10.0` / `torchvision==0.25.0` (CUDA 12.8)
-- [Isaac Lab](https://github.com/isaac-sim/IsaacLab) (`develop` branch)
-- The `isaacsim.robot_motion.dual_arm_rmp_widget` extension (linked from `DEMO/`)
+- Click the **Toggle Panel** button in the top-right corner to open the **Terminal**.
 
-Versions follow the official
-[Isaac Lab pip installation guide](https://isaac-sim.github.io/IsaacLab/develop/source/setup/installation/pip_installation.html).
+  ![](docs/3.jpg)
 
-Because the home directory is persistent, this only needs to be done once per volume.
+- In the terminal, run the following command:
 
-## Running Isaac Sim
+  ```bash
+  python EBiM_Challenge/scripts/scenes/scene_robot_room_keyboard.py
+  ```
 
-```bash
-./run_isaacsim.sh
-```
+### 5. Wait for the simulation, then run it
 
-This activates the `env_isaaclab` virtualenv, fixes up the environment for the Isaac Sim
-ROS 2 bridge (unsets `LD_PRELOAD` / `PYTHONPATH`, sets `LD_LIBRARY_PATH`), and launches the
-full Isaac Sim kit.
+- Wait for the **Isaac Sim environment to fully start** (loading the scene for the first time also takes a little while).
+- Once the simulation is ready, click the **Play** button to start the simulation.
+
+  ![](docs/5.png)
+
+### 6. Restart the server (when needed)
+
+If you need a clean environment, restart the server:
+
+- Go back to **https://ebim.aicor.dev/**
+- Click **Stop My Server**, then click **Start My Server** again.
+
+> ⚠️ **Only files under your home directory (`/home/jovyan`) are preserved across restarts.** Everything outside of it is reset to the original image. For example, software you installed with `apt` will be gone after a restart and must be reinstalled. Keep any work you want to retain inside `/home/jovyan`.
+
+---
+
+## Performance Test Report
+
+The simulation was tested on the following Google Cloud compute configuration:
+
+| Resource | Specification          |
+| -------- | ---------------------- |
+| Machine  | G2-standard-4          |
+| CPU      | 4 vCPU                 |
+| Memory   | 16 GB RAM              |
+| GPU      | NVIDIA L4              |
+
+The screen recording below shows the simulation running in real time on this configuration:
+
+https://github.com/user-attachments/assets/REPLACE_WITH_UPLOADED_VIDEO
