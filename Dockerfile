@@ -44,3 +44,5 @@ ENV CODE_WORKING_DIRECTORY=${HOME}
 # The entrypoint of the docker image
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+COPY EBiM_Challenge /workspace/IROS_Workshop

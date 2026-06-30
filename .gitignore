@@ -1,5 +1,4 @@
 # Ignore everything not already tracked (git never ignores tracked files)
-*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
