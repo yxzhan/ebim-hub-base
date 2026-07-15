@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Best-effort: seed the Isaac Sim kit cache from the shared cache. Never let a
+# failure here (missing source, permissions, no space, ...) abort startup.
+if [ -d /mnt/dev-tools/ebim-cache/cache ]; then
+    echo "[ebim-cache] copying cache into /isaac-sim/kit/ ..."
+    cp -a /mnt/dev-tools/ebim-cache/cache /isaac-sim/kit/ \
+        && echo "[ebim-cache] done." \
+        || echo "[ebim-cache] copy failed, continuing without it."
+else
+    echo "[ebim-cache] /mnt/dev-tools/ebim-cache/cache not found, skipping."
+fi
+
 ebim-start-helpers
 
 # Launcher page: static http server, reachable via jupyter-server-proxy at
