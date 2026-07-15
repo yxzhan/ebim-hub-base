@@ -118,10 +118,3 @@ fi
 eval "$(conda shell.bash hook)"
 
 alias code="$(which code-server)"
-
-# source /opt/ros/jazzy/setup.bash
-
-export ROS_DISTRO=jazzy
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/isaac-sim/exts/isaacsim.ros2.core/jazzy/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/isaac-sim/exts/isaacsim.ros2.bridge/jazzy/lib
