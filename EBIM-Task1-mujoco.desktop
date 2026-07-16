@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EBIM-Task1-mujoco
+Comment=
+Exec=vglrun /workspace/EBiM_Challenge/task1_mujoco/start.sh
+Icon=
+Path=
+Terminal=true
+StartupNotify=false

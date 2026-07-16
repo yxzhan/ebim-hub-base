@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EBIM-Task3
+Comment=
+Exec=tmux new-session 'ebim-run-task3-scene-room' \; split-window -h 'ebim-keyboard'
+Icon=
+Path=
+Terminal=true
+StartupNotify=false
