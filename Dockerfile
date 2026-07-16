@@ -8,20 +8,17 @@ ARG EBIM_REPO_URL=https://github.com/EBiM-Benchmark/benchmark.git
 
 # TEMP FIX: the base image baked /workspace/EBiM_Challenge via COPY, which the
 # repo's .dockerignore stripped of .git — so it was not a git repo and could not
-# be updated. Re-create it as a real clone (proper .git for future `git pull`),
-# then carry over the git-ignored, already-downloaded assets that only exist in
-# the old baked copy:
-#   - cp -an: fill in the git-ignored Task 1 large assets WITHOUT clobbering the
-#     freshly cloned latest source (-n = never overwrite existing files).
-#   - GIT_LFS_SKIP_SMUDGE=1: clone without needing git-lfs; the clone leaves only
-#     an LFS pointer for assets/robot_room.usd, so restore the real file (cp -f)
-#     from the old baked copy.
+# be updated. Re-create it as a real, normal clone (proper .git for future
+# `git pull`), pulling submodules and Git-LFS content the usual way.
+#
+# task1_isaacsim carries large, git-ignored downloaded assets that only exist in
+# the old baked copy, so drop the freshly cloned task1_isaacsim and replace it
+# wholesale with the old directory.
 RUN cd ${WORKSPACE_ROOT} \
     && mv EBiM_Challenge EBiM_Challenge.orig \
-    && GIT_LFS_SKIP_SMUDGE=1 git clone "${EBIM_REPO_URL}" EBiM_Challenge \
-    && cp -an EBiM_Challenge.orig/task1_isaacsim/. EBiM_Challenge/task1_isaacsim/ \
-    && cp -f EBiM_Challenge.orig/assets/robot_room.usd EBiM_Challenge/assets/robot_room.usd \
-    && rm -rf EBiM_Challenge.orig
+    && git clone --recurse-submodules "${EBIM_REPO_URL}" EBiM_Challenge \
+    && rm -rf EBiM_Challenge/task1_isaacsim \
+    && cp -a EBiM_Challenge.orig/task1_isaacsim EBiM_Challenge/ 
 
 # Pre-install Miniconda at build time (task1_mujoco/start.sh would otherwise do
 # this on first launch). On newer conda, `conda env create` shows an interactive
@@ -57,14 +54,15 @@ RUN chmod +x ${WORKSPACE_ROOT}/start-helpers.sh \
     && ln -sf ${WORKSPACE_ROOT}/run-task3-scene-room.sh /usr/local/bin/ebim-run-task3-scene-room \
     && ln -sf ${WORKSPACE_ROOT}/run-keyboard.sh /usr/local/bin/ebim-keyboard
 
-COPY EBIM-Task2.desktop EBIM-Task3.desktop /root/Desktop/
+COPY EBIM-Task1-mujoco.desktop EBIM-Task2.desktop EBIM-Task3.desktop /root/Desktop/
 COPY ./entrypoint.sh /entrypoint.sh
 
 # Launcher page, served by a background http.server in entrypoint.sh and reached
 # via jupyter-server-proxy at /user/<name>/proxy/8899/
 COPY workspace.html ${WORKSPACE_ROOT}/.launcher/index.html
 
-RUN chmod +x /root/Desktop/EBIM-Task2.desktop \
+RUN chmod +x /root/Desktop/EBIM-Task1-mujoco.desktop \
+    /root/Desktop/EBIM-Task2.desktop \
     /root/Desktop/EBIM-Task3.desktop \
     /entrypoint.sh
 
