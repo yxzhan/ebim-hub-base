@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EBIM-Task3-autostart
+Comment=Start EBIM Task 3 automatically once the desktop session (display) is up
+Exec=/workspace/autostart-task3.sh
+Terminal=false
+X-GNOME-Autostart-enabled=true
+StartupNotify=false

@@ -43,18 +43,38 @@ RUN wget -qO /tmp/miniconda.sh "${MINICONDA_URL}" \
          --channel https://repo.anaconda.com/pkgs/main \
          --channel https://repo.anaconda.com/pkgs/r
 
-COPY start-helpers.sh run-task2-scene-room.sh run-keyboard.sh run-task3-scene-room.sh ${WORKSPACE_ROOT}/
+# Pre-create the task1_mujoco conda env ("duo-teleop") from its environment.yml
+# so the first launch of the mujoco task (start.sh -> start.py) skips the
+# multi-minute `conda env create` (and its pip installs of mujoco/pygame/...).
+# start.py detects the existing env via `conda env list` and jumps straight to
+# `conda run -n duo-teleop python main.py`. `conda clean` trims the pkg cache to
+# keep the image smaller.
+RUN /root/miniconda3/bin/conda env create -f \
+      ${WORKSPACE_ROOT}/EBiM_Challenge/task1_mujoco/robotiq_duo_full_scene_minimal_core/environment.yml \
+    && /root/miniconda3/bin/conda clean -a -y
+
+COPY start-helpers.sh run-task2-scene-room.sh run-keyboard.sh run-task3-scene-room.sh \
+     run-task3-session.sh autostart-task3.sh ${WORKSPACE_ROOT}/
 
 RUN chmod +x ${WORKSPACE_ROOT}/start-helpers.sh \
     ${WORKSPACE_ROOT}/run-task2-scene-room.sh \
     ${WORKSPACE_ROOT}/run-keyboard.sh \
     ${WORKSPACE_ROOT}/run-task3-scene-room.sh \
+    ${WORKSPACE_ROOT}/run-task3-session.sh \
+    ${WORKSPACE_ROOT}/autostart-task3.sh \
     && ln -sf ${WORKSPACE_ROOT}/start-helpers.sh /usr/local/bin/ebim-start-helpers \
     && ln -sf ${WORKSPACE_ROOT}/run-task2-scene-room.sh /usr/local/bin/ebim-run-task2-scene-room \
     && ln -sf ${WORKSPACE_ROOT}/run-task3-scene-room.sh /usr/local/bin/ebim-run-task3-scene-room \
+    && ln -sf ${WORKSPACE_ROOT}/run-task3-session.sh /usr/local/bin/ebim-run-task3-session \
     && ln -sf ${WORKSPACE_ROOT}/run-keyboard.sh /usr/local/bin/ebim-keyboard
 
 COPY EBIM-Task1-mujoco.desktop EBIM-Task2.desktop EBIM-Task3.desktop /root/Desktop/
+
+# XDG autostart: run Task 3 automatically when the desktop session (display)
+# comes up. Remove this file to disable auto-start.
+RUN mkdir -p /root/.config/autostart
+COPY EBIM-Task3-autostart.desktop /root/.config/autostart/
+
 COPY ./entrypoint.sh /entrypoint.sh
 
 # Launcher page, served by a background http.server in entrypoint.sh and reached
