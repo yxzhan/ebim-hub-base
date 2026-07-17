@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VRB Stress Test</title>
+<style>
+  :root {
+    --bg: #1e1e2e; --panel: #11111b; --panel2: #181825;
+    --line: #313244; --line2: #45475a;
+    --text: #cdd6f4; --muted: #a6adc8; --faint: #6c7086;
+    --blue: #89b4fa; --green: #a6e3a1; --yellow: #f9e2af; --mauve: #cba6f7; --red: #f38ba8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    display: flex; flex-direction: column; overflow: hidden;
+    color: var(--text);
+    background: radial-gradient(1200px 600px at 50% -280px, #24273a, var(--bg)) fixed;
+  }
+
+  header {
+    display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+    padding: 12px 16px; flex: 0 0 auto;
+    position: sticky; top: 0; width: 100%; z-index: 5;
+    background: rgba(24, 24, 37, 0.85); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; letter-spacing: 0.2px; }
+  .brand .logo {
+    display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--blue), var(--mauve));
+    color: #11111b; font-size: 14px; font-weight: 800;
+  }
+  .field {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--muted);
+  }
+  .field input {
+    font: 500 14px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    text-transform: none; letter-spacing: normal;
+    padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--line2); background: var(--panel); color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.22); }
+  .num { width: 76px; text-align: center; }
+  .target-field { flex: 1 1 auto; min-width: 0; }
+  #target {
+    flex: 1 1 auto; width: 100%; min-width: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px;
+  }
+  #start {
+    font: 700 14px inherit; cursor: pointer; padding: 8px 20px; border: 0; border-radius: 9px;
+    background: linear-gradient(135deg, var(--blue), #74a0f0); color: #11111b;
+    box-shadow: 0 2px 10px rgba(137, 180, 250, 0.35);
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  #start:hover { filter: brightness(1.06); box-shadow: 0 4px 16px rgba(137, 180, 250, 0.5); }
+  #start:active { transform: translateY(1px); }
+
+  /* second row: numeric controls (own line) */
+  .controls { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; flex-basis: 100%; }
+
+  /* stat chips (own line) */
+  .stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-basis: 100%; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+  }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+  .chip.loaded i { background: var(--green); }
+  .chip.loading i { background: var(--yellow); }
+  .chip.timeout i { background: var(--red); }
+  .chip.elapsed { margin-left: auto; }
+
+  /* wrapping layout, vertical scroll */
+  main {
+    flex: 1 1 auto;
+    display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center;
+    gap: 14px; padding: 16px;
+    overflow-y: auto; overflow-x: hidden;
+  }
+  main:empty::before {
+    content: "Set the fields above, then press Start"; margin: auto;
+    color: var(--faint); font-size: 14px;
+  }
+  main::-webkit-scrollbar { width: 10px; }
+  main::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+  main::-webkit-scrollbar-track { background: transparent; }
+
+  .cell {
+    display: flex; flex-direction: column;
+    /* size defaults; overridden inline from the width/height inputs */
+    width: 540px; height: 450px;
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    background: var(--panel); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
+  }
+  .cell:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45); }
+  .cell[data-state="loading"] { border-color: rgba(249, 226, 175, 0.5); }
+  .cell[data-state="loaded"]  { border-color: rgba(166, 227, 161, 0.45); }
+  .cell[data-state="timeout"] { border-color: rgba(243, 139, 168, 0.5); }
+  .cell-head {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 12px; font-size: 13px; flex: 0 0 auto;
+    background: var(--panel2); border-bottom: 1px solid var(--line);
+  }
+  .badge {
+    display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 6px; background: var(--line2); font-weight: 700; font-size: 11px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--faint); flex: 0 0 auto; }
+  .state { font-weight: 600; }
+  .state.waiting { color: var(--faint); }
+  .state.loading { color: var(--yellow); }
+  .state.loaded  { color: var(--green); }
+  .state.timeout { color: var(--red); }
+  .cell[data-state="loading"] .dot { background: var(--yellow); animation: pulse 1s infinite; }
+  .cell[data-state="loaded"]  .dot { background: var(--green); }
+  .cell[data-state="timeout"] .dot { background: var(--red); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(249, 226, 175, 0.5); }
+    50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(249, 226, 175, 0); }
+  }
+  .timer {
+    margin-left: auto; color: var(--faint); font-size: 12.5px; font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .open-btn {
+    display: inline-grid; place-items: center; width: 24px; height: 24px;
+    border-radius: 6px; border: 1px solid transparent;
+    color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .open-btn:hover { background: var(--line2); color: var(--text); border-color: var(--line2); }
+  iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo">▚</span>VRB Stress Tes</div>
+    <label class="field target-field">lab_url <input id="target" type="text"></label>
+    <div class="controls">
+      <label class="field">launches <input id="count"   class="num" type="number" min="1" value="10"></label>
+      <label class="field">interval (s) <input id="stagger" class="num" type="number" min="0" step="0.5" value="1"></label>
+      <label class="field">timeout (s) <input id="timeout" class="num" type="number" min="1" step="10" value="300"></label>
+      <label class="field">cell width <input id="cellw"  class="num" type="number" min="120" step="10" value="540"></label>
+      <label class="field">cell height <input id="cellh" class="num" type="number" min="120" step="10" value="450"></label>
+      <button id="start">▶ Start</button>
+    </div>
+    <div class="stats" id="summary"></div>
+  </header>
+  <main id="grid"></main>
+
+  <script>
+    // One iframe = one launch = one anonymous lab on the hub.
+    // Launch count, cell size and target are all read from the inputs.
+    let STAGGER_MS = 1000;     // delay between successive iframe starts (from input, seconds)
+    let TIMEOUT_MS = 120000;   // per-cell load timeout (from input, seconds)
+    const BINDER_PATH = "/v2/gh/yxzhan/ebim-vrb-lab.git/main?urlpath=desktop";
+
+    // Do not hardcode the domain: derive the binder host from the current page
+    // host (swap the first label to "ebim-binder", reuse the same base domain).
+    // Falls back to ebim-binder.aicor.dev when opened locally / via file://.
+    function defaultTarget() {
+      const parts = location.hostname.split(".");
+      if (location.protocol.startsWith("http") && parts.length >= 2) {
+        parts[0] = "ebim-binder";
+        return `${location.protocol}//${parts.join(".")}${BINDER_PATH}`;
+      }
+      return `https://ebim-binder.aicor.dev${BINDER_PATH}`;
+    }
+
+    const grid = document.getElementById("grid");
+    const cells = [];   // { root, iframe, stateEl, timerEl, startAt, firstLoadAt, loads, timers[] }
+    let runId = 0;      // bumped on each start() so stale rAF loops stop
+    let COUNT = 0, CELL_W = 540, CELL_H = 450, LAUNCH_URL = "";
+
+    function fmt(ms) { return (ms / 1000).toFixed(1) + "s"; }
+
+    function intInput(id, fallback, min) {
+      const v = parseInt(document.getElementById(id).value, 10);
+      return Math.max(min, Number.isFinite(v) ? v : fallback);
+    }
+
+    function floatInput(id, fallback, min) {
+      const v = parseFloat(document.getElementById(id).value);
+      return Math.max(min, Number.isFinite(v) ? v : fallback);
+    }
+
+    function buildGrid() {
+      grid.innerHTML = "";
+      cells.length = 0;
+      for (let i = 0; i < COUNT; i++) {
+        const root = document.createElement("div");
+        root.className = "cell";
+        root.dataset.state = "waiting";
+        root.style.width = CELL_W + "px";
+        root.style.height = CELL_H + "px";
+
+        const head = document.createElement("div");
+        head.className = "cell-head";
+        head.innerHTML =
+          `<span class="badge">${i + 1}</span>` +
+          `<span class="dot"></span>` +
+          `<span class="state waiting">waiting</span>` +
+          `<span class="timer">–</span>` +
+          `<a class="open-btn" target="_blank" rel="noopener" title="Open in new tab">↗</a>`;
+
+        const iframe = document.createElement("iframe");
+        iframe.loading = "eager";
+        iframe.title = "lab-" + (i + 1);
+
+        // ↗ opens the iframe's CURRENT url (post-redirect) when it is same-origin
+        // and thus readable; falls back to the launch url while still cross-origin.
+        const openBtn = head.querySelector(".open-btn");
+        openBtn.href = LAUNCH_URL;
+        openBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          let url = LAUNCH_URL;
+          try { url = iframe.contentWindow.location.href; } catch (err) { /* cross-origin */ }
+          window.open(url, "_blank", "noopener");
+        });
+
+        root.appendChild(head);
+        root.appendChild(iframe);
+        grid.appendChild(root);
+
+        cells.push({
+          root, iframe, openBtn,
+          stateEl: head.querySelector(".state"),
+          timerEl: head.querySelector(".timer"),
+          startAt: null, firstLoadAt: null, loads: 0,
+          timedOut: false, timeoutTimer: null, timers: [],
+        });
+      }
+    }
+
+    function setState(c, name, text) {
+      c.root.dataset.state = name;
+      c.stateEl.className = "state " + name;
+      c.stateEl.textContent = text;
+    }
+
+    function start() {
+      // read the inputs
+      COUNT  = intInput("count", 1, 1);
+      CELL_W = intInput("cellw", 540, 120);
+      CELL_H = intInput("cellh", 450, 120);
+      STAGGER_MS = floatInput("stagger", 1, 0) * 1000;
+      TIMEOUT_MS = floatInput("timeout", 120, 1) * 1000;
+      LAUNCH_URL = document.getElementById("target").value.trim();
+      if (!LAUNCH_URL) { alert("Please enter a lab url"); return; }
+
+      // clear any pending timers from a previous run
+      cells.forEach(c => c.timers.forEach(clearTimeout));
+      buildGrid();
+
+      const myRun = ++runId;   // invalidates the previous updateSummary loop
+      const runStart = performance.now();
+
+      cells.forEach((c, i) => {
+        setState(c, "waiting", "waiting");
+        c.timerEl.textContent = "T-" + fmt(i * STAGGER_MS);
+
+        const t = setTimeout(() => {
+          c.startAt = performance.now();
+          setState(c, "loading", "loading");
+
+          // per-cell timeout: if it hasn't reached the jupyter界面 within
+          // TIMEOUT_MS, give up on this cell and mark it timeout.
+          c.timeoutTimer = setTimeout(() => {
+            if (c.firstLoadAt === null) {
+              c.timedOut = true;
+              c.timerEl.textContent = fmt(performance.now() - c.startAt);
+              setState(c, "timeout", "timeout");
+            }
+          }, TIMEOUT_MS);
+          c.timers.push(c.timeoutTimer);
+
+          c.iframe.addEventListener("load", () => {
+            c.loads++;
+            // Binder redirects several times inside the frame; each fires load.
+            // This page is served from the jupyter host, so the final user server
+            // is same-origin and its URL is readable; the binder build page is
+            // cross-origin and throws. So "reached /user/..." == really loaded.
+            let href = null;
+            try { href = c.iframe.contentWindow.location.href; } catch (e) { /* cross-origin: still on binder */ }
+            if (href) c.openBtn.href = href;   // keep ↗ current (for middle/ctrl-click)
+            if (href && href.includes("/user/")) {
+              clearTimeout(c.timeoutTimer);
+              c.timedOut = false;
+              if (c.firstLoadAt === null) c.firstLoadAt = performance.now();
+              setState(c, "loaded", "loaded");
+            } else if (!c.timedOut) {
+              setState(c, "loading", "loading ×" + c.loads);
+            }
+          });
+
+          c.iframe.src = LAUNCH_URL;
+        }, i * STAGGER_MS);
+
+        c.timers.push(t);
+      });
+
+      updateSummary(myRun, runStart);
+    }
+
+    function updateSummary(myRun, runStart) {
+      if (myRun !== runId) return;   // a newer run took over; stop this loop
+      const now = performance.now();
+      let loaded = 0, loading = 0, waiting = 0, timeout = 0;
+
+      cells.forEach(c => {
+        if (c.startAt === null) {
+          waiting++;
+        } else if (c.firstLoadAt !== null) {
+          loaded++;
+          c.timerEl.textContent = fmt(c.firstLoadAt - c.startAt);
+        } else if (c.timedOut) {
+          timeout++;   // timer frozen at the timeout instant
+        } else {
+          loading++;
+          c.timerEl.textContent = fmt(now - c.startAt);   // live count-up
+        }
+      });
+
+      document.getElementById("summary").innerHTML =
+        `<span class="chip loaded"><i></i>loaded ${loaded}/${COUNT}</span>` +
+        `<span class="chip loading"><i></i>loading ${loading}</span>` +
+        `<span class="chip waiting"><i></i>waiting ${waiting}</span>` +
+        `<span class="chip timeout"><i></i>timeout ${timeout}</span>` +
+        `<span class="chip elapsed">⏱ ${fmt(now - runStart)}</span>`;
+
+      requestAnimationFrame(() => updateSummary(myRun, runStart));
+    }
+
+    document.getElementById("target").value = defaultTarget();
+    document.getElementById("start").addEventListener("click", start);
+  </script>
+</body>
+</html>

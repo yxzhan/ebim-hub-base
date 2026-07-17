@@ -77,9 +77,13 @@ COPY EBIM-Task3-autostart.desktop /root/.config/autostart/
 
 COPY ./entrypoint.sh /entrypoint.sh
 
+ENV CODE_WORKING_DIRECTORY=/workspace/EBiM_Challenge/
+
 # Launcher page, served by a background http.server in entrypoint.sh and reached
 # via jupyter-server-proxy at /user/<name>/proxy/8899/
 COPY workspace.html ${WORKSPACE_ROOT}/.launcher/index.html
+# Stress-test page, same server, reached at /user/<name>/proxy/8899/stress-test.html
+COPY stress-test.html ${WORKSPACE_ROOT}/.launcher/stress-test.html
 
 RUN chmod +x /root/Desktop/EBIM-Task1-mujoco.desktop \
     /root/Desktop/EBIM-Task2.desktop \
