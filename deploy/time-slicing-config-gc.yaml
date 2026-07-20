@@ -1,0 +1,22 @@
+# GPU time-slicing for the GC MicroK8s cluster: split each L4 into 2 shares.
+# Based on the binder repo's time-slicing-config-all.yaml but replicas 4 -> 2
+# (matches the GKE side's max-shared-clients-per-gpu=2).
+# Apply into the gpu-operator namespace, then point the ClusterPolicy at it:
+#   kubectl apply -f time-slicing-config-gc.yaml -n gpu-operator-resources
+#   kubectl patch clusterpolicies.nvidia.com/cluster-policy \
+#     -n gpu-operator-resources --type merge \
+#     -p '{"spec":{"devicePlugin":{"config":{"name":"time-slicing-config-all","default":"any"}}}}'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: time-slicing-config-all
+data:
+  any: |-
+    version: v1
+    flags:
+      migStrategy: none
+    sharing:
+      timeSlicing:
+        resources:
+        - name: nvidia.com/gpu
+          replicas: 2

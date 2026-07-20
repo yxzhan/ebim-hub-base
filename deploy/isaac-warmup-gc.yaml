@@ -1,0 +1,61 @@
+# Per-node Isaac Sim shader-cache warmup (Job template).
+#
+# Why a Job (not part of image-prepuller DaemonSet):
+#   warmup.sh runs the Isaac Sim RTX renderer and MUST hold nvidia.com/gpu:1.
+#   A long-lived pod (DaemonSet + pause) that requests a GPU keeps that GPU
+#   *reserved for the pod's whole lifetime* (init/any container request counts
+#   for scheduling the entire pod). With 1 GPU per node that would permanently
+#   block user sessions. A Job runs warmup to completion and RELEASES the GPU.
+#
+# What it does:
+#   - mounts the node-local Isaac cache exactly like the singleuser pods
+#     (hostPath /root/isaac-sim/kit/cache -> /isaac-sim/kit/cache)
+#   - runs /isaac-sim/warmup.sh (warms the RTX shader cache into that hostPath)
+#   - same Isaac env as singleuser (ACCEPT_EULA / OMNI_KIT_* / VGL_DISPLAY=egl)
+#   - pinned to one node via kubernetes.io/hostname; runsAsUser 0 (like singleuser)
+#
+# This file is a TEMPLATE: __NODE__ / __SUFFIX__ are filled in per node by
+# run_isaac_warmup.sh. Apply/monitor through that script, not directly.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: isaac-warmup-__SUFFIX__
+  namespace: binder
+  labels:
+    app: isaac-warmup
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400   # auto-clean the finished Job after 24h
+  template:
+    metadata:
+      labels:
+        app: isaac-warmup
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: __NODE__
+      securityContext:
+        runAsUser: 0
+      containers:
+        - name: warmup
+          image: intel4corointel4coro/yxzhan-2debim-2dvrb-2dlab-3755e6:010592ad63f106cac6f5f39fcf954a6994368b6b
+          command: ["/bin/bash", "/isaac-sim/warmup.sh"]
+          env:
+            - {name: LP_NUM_THREADS, value: "4"}
+            - {name: NVIDIA_DRIVER_CAPABILITIES, value: "all"}
+            - {name: VGL_DISPLAY, value: "egl"}
+            - {name: ACCEPT_EULA, value: "YES"}
+            - {name: PRIVACY_CONSENT, value: "YES"}
+            - {name: OMNI_KIT_ACCEPT_EULA, value: "YES"}
+            - {name: OMNI_KIT_ALLOW_ROOT, value: "1"}
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: isaacsim-kit-cache
+              mountPath: /isaac-sim/kit/cache
+      volumes:
+        - name: isaacsim-kit-cache
+          hostPath:
+            path: /root/isaac-sim/kit/cache
+            type: DirectoryOrCreate

@@ -1,0 +1,32 @@
+# Pre-pull VRB hub base image onto ALL nodes of the GC MicroK8s cluster.
+# Adapted from the repo's image-prepuller.yaml:
+#   - nodeSelector/tolerations removed (GKE-specific labels; here every node runs user pods)
+# Usage:
+#   kubectl apply -f image-prepuller-gc.yaml
+#   kubectl delete -f image-prepuller-gc.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: image-prepuller
+  namespace: binder
+spec:
+  selector:
+    matchLabels:
+      app: image-prepuller
+  template:
+    metadata:
+      labels:
+        app: image-prepuller
+    spec:
+      initContainers:
+        # Git repo: yxzhan/ebim-vrb-hub (BinderHub image naming convention)
+        - name: pull-ebim-hub-base
+          image: intel4corointel4coro/yxzhan-2debim-2dvrb-2dlab-3755e6:010592ad63f106cac6f5f39fcf954a6994368b6b
+          command: ["sh", "-c", "exit 0"]
+          resources:
+            limits:
+              cpu: "0"
+              memory: "0"
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.9

@@ -1,0 +1,51 @@
+extraConfig:
+  ratelimit: |
+    c.RateLimiter.limit = 200
+    c.RateLimiter.period_seconds = 3600
+
+# Pin the binder pod (BinderHub itself) to 290 (EU, the primary node after the
+# 2026-07-19 HA migration), co-located with cloudflared + hub + CHP + build pods.
+# Keeps the whole control/ingress path in EU instead of scattered across US nodes.
+nodeSelector:
+  kubernetes.io/hostname: l4-vm-290.c.ebim26ham-290.internal
+
+config:
+  BinderHub:
+    build_node_selector:
+      kubernetes.io/hostname: l4-vm-290.c.ebim26ham-290.internal
+    hub_url: https://ebim-jupyter.aicor.dev
+jupyterhub:
+  hub:
+    # Pin the JupyterHub hub pod to 290 (EU primary) too, so demoting 281 doesn't
+    # scatter it. hub is stateful-ish (spawns/routes); keep it next to CHP + cloudflared.
+    nodeSelector:
+      kubernetes.io/hostname: l4-vm-290.c.ebim26ham-290.internal
+  cull:
+    # cull interval (unchanged, 5 min, out of phase with proxy check-routes)
+    every: 300
+    # idle shutdown: 60 minutes (was 300s in binder.yaml)
+    timeout: 3600
+    # max session lifetime: 24 hours = 24 * 3600 (was 14400s / 4h in binder.yaml)
+    maxAge: 86400
+  proxy:
+    service:
+      type: ClusterIP
+    # Pin the configurable-http-proxy (CHP) to 290 (EU primary), co-located with
+    # cloudflared + hub. CHP is stateful (in-memory routing table updated by the
+    # hub) so it can't be replicated; keeping it in EU next to the ingress avoids
+    # the transatlantic cloudflared(EU)->CHP(US)->userpod(EU) double hop.
+    chp:
+      nodeSelector:
+        kubernetes.io/hostname: l4-vm-290.c.ebim26ham-290.internal
+  singleuser:
+    storage:
+      extraVolumeMounts:
+      - mountPath: /isaac-sim/kit/cache
+        name: isaacsim-kit-cache
+      extraVolumes:
+      - hostPath:
+          path: /root/isaac-sim/kit/cache
+          type: DirectoryOrCreate
+        name: isaacsim-kit-cache
+service:
+  type: ClusterIP
