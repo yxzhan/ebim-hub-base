@@ -53,7 +53,7 @@ A short walkthrough — launching the lab in the browser, Task 3 (Isaac Sim) aut
 
 <!-- VIDEO PLACEHOLDER — embed the demo recording here (drag the mp4 into the README editor, or use a <video> tag) -->
 
-https://github.com/user-attachments/assets/34a5de4e-26ec-4559-875b-f3efa1857552
+https://github.com/user-attachments/assets/393d0faa-ca2a-4d63-ad61-dfe5e86fc0b1
 
 
 ## Stress test
@@ -66,9 +66,7 @@ Load-tested by launching **20 lab sessions concurrently** (each auto-starting th
 
 <!-- VIDEO PLACEHOLDER — embed the stress-test recording here -->
 
-
-https://github.com/user-attachments/assets/be6c1dfd-fed6-4fdd-92a3-e5aea390db37
-
+https://github.com/user-attachments/assets/a3556e37-995f-4aaf-9d4b-0c10e64e122c
 
 
 ## Infrastructure & hardware
