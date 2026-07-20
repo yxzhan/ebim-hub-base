@@ -1,6 +1,8 @@
 # ebim-vrb-lab
 
-A ready-to-run, browser-based lab for the EBiM robot-manipulation tasks (Isaac Sim + MuJoCo teleoperation). No local install — everything runs in the cloud through your browser.
+**ebim-vrb-lab** packages the [EBiM benchmark](https://ebim-benchmark.github.io/) simulation tasks into a ready-to-run, browser-based lab — **no local installation and no GPU of your own required.** Open a single link and you get a GPU-backed cloud session running the official EBiM environments: **Task 1** (cable-routing teleoperation in MuJoCo) and **Task 2 / Task 3** (room-scene and assisted-living teleoperation in Isaac Sim 5.1). The session bundles everything you need to work with them — a full VNC remote desktop, a browser-based ROS 2 arm-teleoperation UI, VS Code, and JupyterLab — and starts Task 3 automatically once it loads.
+
+It runs on the AICOR **VRB** (Virtual Research Building) / BinderHub platform: each session is a self-contained container scheduled onto a pooled GPU cluster, so all the heavy simulation runs in the cloud and streams to your browser.
 
 
 ## Quick start
@@ -49,12 +51,23 @@ The workspace is a single page with a tab bar at the top. Each tab embeds one to
 
 A short walkthrough — launching the lab in the browser, Task 3 (Isaac Sim) auto-starting, and controlling the robot arms:
 
-<!-- VIDEO PLACEHOLDER — embed / link the demo recording here -->
+<!-- VIDEO PLACEHOLDER — embed the demo recording here (drag the mp4 into the README editor, or use a <video> tag) -->
 _(demo video coming soon)_
+
+## Stress test
+
+Load-tested by launching **20 lab sessions concurrently** (each auto-starting the Task 3 Isaac Sim scene):
+
+- **20 / 20** launches succeeded, scheduler placing **exactly 2 sessions per L4** across all 10 nodes;
+- pod start-up **median 13.7 s** (range 11–20 s); Task 3 scene ready in ~60 s;
+- end-to-end VNC-transport round-trip **~20–24 ms** for EU clients (feels local).
+
+<!-- VIDEO PLACEHOLDER — embed the stress-test recording here -->
+_(stress-test video coming soon)_
 
 ## Infrastructure & hardware
 
-This lab runs on the VRB / BinderHub stack. The current testbed is a **Google Cloud** cluster of **10 GPU VMs**, pooled from 10 separate GCP projects into a single MicroK8s cluster over a WireGuard mesh:
+This lab runs on the AICOR VRB / BinderHub stack. The current testbed is a **Google Cloud** cluster of **10 GPU VMs**, pooled from 10 separate GCP projects into a single MicroK8s cluster over a WireGuard mesh:
 
 | | |
 |---|---|
@@ -64,17 +77,7 @@ This lab runs on the VRB / BinderHub stack. The current testbed is a **Google Cl
 | **Orchestration** | MicroK8s + NVIDIA GPU Operator; Cloudflare Tunnel ingress (HTTPS) |
 | **Environment** | single Docker image: Isaac Sim 5.1 + MuJoCo + VNC desktop + VS Code + JupyterLab |
 
-The full build — from VM creation through drivers, the WireGuard mesh, MicroK8s, BinderHub, Cloudflare ingress, cache pre-warming and an HA control-plane migration — is documented step by step in **[`deploy/deployment-log.md`](deploy/deployment-log.md)**, alongside the automation scripts + Kubernetes manifests in **[`deploy/`](deploy/)**. See also the **[technical report](docs/infrastructure-report.md)**.
-
-## Stress test
-
-Load-tested by launching **20 lab sessions concurrently** (each auto-starting the Task 3 Isaac Sim scene):
-
-- **20 / 20** launches succeeded, scheduler placing **exactly 2 sessions per L4** across all 10 nodes;
-- pod start-up **median 13.7 s** (range 11–20 s); Task 3 scene ready in ~40 s;
-- end-to-end VNC-transport round-trip **~20–24 ms** for EU clients (feels local).
-
-Details, latency breakdown and reproduction steps: **[`docs/stress-test-results.md`](docs/stress-test-results.md)** (notebook `binder_stress_launch_final.ipynb`).
+The full build — from VM creation through drivers, the WireGuard mesh, MicroK8s, BinderHub, Cloudflare ingress, cache pre-warming and an HA control-plane migration — is documented step by step, along with the automation scripts and Kubernetes manifests.
 
 ## ⚠️ Deployment notice (temporary)
 
