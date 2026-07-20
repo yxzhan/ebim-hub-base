@@ -52,7 +52,9 @@ The workspace is a single page with a tab bar at the top. Each tab embeds one to
 A short walkthrough — launching the lab in the browser, Task 3 (Isaac Sim) auto-starting, and controlling the robot arms:
 
 <!-- VIDEO PLACEHOLDER — embed the demo recording here (drag the mp4 into the README editor, or use a <video> tag) -->
-_(demo video coming soon)_
+
+https://github.com/user-attachments/assets/34a5de4e-26ec-4559-875b-f3efa1857552
+
 
 ## Stress test
 
@@ -63,7 +65,11 @@ Load-tested by launching **20 lab sessions concurrently** (each auto-starting th
 - end-to-end VNC-transport round-trip **~20–24 ms** for EU clients (feels local).
 
 <!-- VIDEO PLACEHOLDER — embed the stress-test recording here -->
-_(stress-test video coming soon)_
+
+
+https://github.com/user-attachments/assets/be6c1dfd-fed6-4fdd-92a3-e5aea390db37
+
+
 
 ## Infrastructure & hardware
 
