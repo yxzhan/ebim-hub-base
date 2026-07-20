@@ -45,8 +45,39 @@ The workspace is a single page with a tab bar at the top. Each tab embeds one to
 | **JupyterLab** | A full JupyterLab session. |
 
 
+## Demo
+
+A short walkthrough — launching the lab in the browser, Task 3 (Isaac Sim) auto-starting, and controlling the robot arms:
+
+<!-- VIDEO PLACEHOLDER — embed / link the demo recording here -->
+_(demo video coming soon)_
+
+## Infrastructure & hardware
+
+This lab runs on the VRB / BinderHub stack. The current testbed is a **Google Cloud** cluster of **10 GPU VMs**, pooled from 10 separate GCP projects into a single MicroK8s cluster over a WireGuard mesh:
+
+| | |
+|---|---|
+| **GPU** | NVIDIA **L4** (24 GB), 1 per VM — **GPU time-sliced 2 shares/card → 20 session slots** |
+| **VM** | `g2-standard-32` (32 vCPU / 128 GB RAM), 200 GB disk |
+| **Nodes** | 10 × L4 (5 in EU `europe-west4-c`, 5 in the US) |
+| **Orchestration** | MicroK8s + NVIDIA GPU Operator; Cloudflare Tunnel ingress (HTTPS) |
+| **Environment** | single Docker image: Isaac Sim 5.1 + MuJoCo + VNC desktop + VS Code + JupyterLab |
+
+The full build — from VM creation through drivers, the WireGuard mesh, MicroK8s, BinderHub, Cloudflare ingress, cache pre-warming and an HA control-plane migration — is documented step by step in **[`deploy/deployment-log.md`](deploy/deployment-log.md)**, alongside the automation scripts + Kubernetes manifests in **[`deploy/`](deploy/)**. See also the **[technical report](docs/infrastructure-report.md)**.
+
+## Stress test
+
+Load-tested by launching **20 lab sessions concurrently** (each auto-starting the Task 3 Isaac Sim scene):
+
+- **20 / 20** launches succeeded, scheduler placing **exactly 2 sessions per L4** across all 10 nodes;
+- pod start-up **median 13.7 s** (range 11–20 s); Task 3 scene ready in ~40 s;
+- end-to-end VNC-transport round-trip **~20–24 ms** for EU clients (feels local).
+
+Details, latency breakdown and reproduction steps: **[`docs/stress-test-results.md`](docs/stress-test-results.md)** (notebook `binder_stress_launch_final.ipynb`).
+
 ## ⚠️ Deployment notice (temporary)
 
-This lab is currently deployed on a **Google Cloud** cluster with **10 NVIDIA L4 GPUs**. Each running lab reserves one GPU, so **at most 10 labs can run at the same time** — if all 10 are busy, you may have to wait for a slot.
+This lab is currently deployed on the **Google Cloud** cluster described above (**10 NVIDIA L4 GPUs**, time-sliced into **20 session slots**). If all slots are busy, you may have to wait for one to free up.
 
 The deployment is **temporary and available only until July 20, 2026**. After that date the environment will be shut down.

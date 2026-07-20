@@ -53,8 +53,10 @@ RUN /root/miniconda3/bin/conda env create -f \
       ${WORKSPACE_ROOT}/EBiM_Challenge/task1_mujoco/robotiq_duo_full_scene_minimal_core/environment.yml \
     && /root/miniconda3/bin/conda clean -a -y
 
-COPY start-helpers.sh run-task2-scene-room.sh run-keyboard.sh run-task3-scene-room.sh \
-     run-task3-session.sh autostart-task3.sh ${WORKSPACE_ROOT}/
+COPY container/scripts/start-helpers.sh container/scripts/run-task2-scene-room.sh \
+     container/scripts/run-keyboard.sh container/scripts/run-task3-scene-room.sh \
+     container/scripts/run-task3-session.sh container/scripts/autostart-task3.sh \
+     ${WORKSPACE_ROOT}/
 
 RUN chmod +x ${WORKSPACE_ROOT}/start-helpers.sh \
     ${WORKSPACE_ROOT}/run-task2-scene-room.sh \
@@ -68,22 +70,29 @@ RUN chmod +x ${WORKSPACE_ROOT}/start-helpers.sh \
     && ln -sf ${WORKSPACE_ROOT}/run-task3-session.sh /usr/local/bin/ebim-run-task3-session \
     && ln -sf ${WORKSPACE_ROOT}/run-keyboard.sh /usr/local/bin/ebim-keyboard
 
-COPY EBIM-Task1-mujoco.desktop EBIM-Task2.desktop EBIM-Task3.desktop /root/Desktop/
+COPY container/desktop/EBIM-Task1-mujoco.desktop container/desktop/EBIM-Task2.desktop \
+     container/desktop/EBIM-Task3.desktop /root/Desktop/
 
 # XDG autostart: run Task 3 automatically when the desktop session (display)
 # comes up. Remove this file to disable auto-start.
 RUN mkdir -p /root/.config/autostart
-COPY EBIM-Task3-autostart.desktop /root/.config/autostart/
+COPY container/desktop/EBIM-Task3-autostart.desktop /root/.config/autostart/
 
-COPY ./entrypoint.sh /entrypoint.sh
+COPY container/scripts/entrypoint.sh /entrypoint.sh
 
 ENV CODE_WORKING_DIRECTORY=/workspace/EBiM_Challenge/
 
 # Launcher page, served by a background http.server in entrypoint.sh and reached
 # via jupyter-server-proxy at /user/<name>/proxy/8899/
-COPY workspace.html ${WORKSPACE_ROOT}/.launcher/index.html
+COPY container/web/workspace.html ${WORKSPACE_ROOT}/.launcher/index.html
 # Stress-test page, same server, reached at /user/<name>/proxy/8899/stress-test.html
-COPY stress-test.html ${WORKSPACE_ROOT}/.launcher/stress-test.html
+COPY container/web/stress-test.html ${WORKSPACE_ROOT}/.launcher/stress-test.html
+
+# Patch the Task 1 (Isaac Sim) browser-controller static assets: overlay our
+# versions onto the cloned EBiM_Challenge repo (must run after the clone above),
+# overwriting the upstream index.html / monitor.html / topology.html.
+COPY container/browser_control_patch/static/ \
+     ${WORKSPACE_ROOT}/EBiM_Challenge/task1_isaacsim/services/browser_controller/static/
 
 RUN chmod +x /root/Desktop/EBIM-Task1-mujoco.desktop \
     /root/Desktop/EBIM-Task2.desktop \
