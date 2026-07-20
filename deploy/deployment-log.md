@@ -2,7 +2,7 @@
 
 > A complete, step-by-step record of deploying the VRB (BinderHub-based) system on
 > Google Cloud for the EBiM benchmark infrastructure.
-> Steps marked **🙋 manual** cannot be automated and require a human operator; all
+> Steps marked **manual operation required** cannot be automated and require a human operator; all
 > other steps are fully scripted / agent-automatable.
 
 > **Sanitization note.** This document lives in a *public* repository (BinderHub
@@ -56,7 +56,7 @@ tar -xzf gcloud.tar.gz && rm gcloud.tar.gz
 export PATH=/opt/google-cloud-sdk/bin:$PATH   # add to ~/.bashrc
 ```
 
-### 1.2 Console prep: enable API, request GPU quota — 🙋 manual
+### 1.2 Console prep: enable API, request GPU quota — manual
 
 New test accounts have a **GPU quota of 0** by default; without a quota increase no
 GPU VM can be created. This must be done per account in the web console:
@@ -77,7 +77,7 @@ GPU VM can be created. This must be done per account in the web console:
 > console. Skipping this makes the script fail with a `GPUS_ALL_REGIONS` quota error and
 > skip that account.
 
-### 1.3 Log in to each account — 🙋 manual
+### 1.3 Log in to each account — manual operation required
 
 **This is the one step in the whole flow that cannot be automated.** The gcloud CLI does
 not support username/password login; Google accounts only authenticate via browser OAuth:
@@ -312,7 +312,7 @@ GPU and otherwise won't schedule.
 All deviations live in one overrides file `values-gc-overrides.yaml` (last in the helm
 command → highest precedence).
 
-### 4.3 Configure registry credentials — 🙋 manual
+### 4.3 Configure registry credentials — manual operation required
 
 Built user-environment images push to Docker Hub. On the control plane, edit
 `~/binder.intel4coro.de-deploy/secret.yaml` with the shared intel4coro account (the VRB
@@ -391,7 +391,7 @@ curl -sSL -o /tmp/cloudflared.deb \
 sudo dpkg -i /tmp/cloudflared.deb
 ```
 
-### 5.2 Authorize the Cloudflare account — 🙋 manual
+### 5.2 Authorize the Cloudflare account — manual operation required
 
 Run `cloudflared tunnel login`; it prints a `https://dash.cloudflare.com/argotunnel?...`
 URL — open it, sign in, select the target zone, and authorize. The cert is written to
@@ -460,7 +460,7 @@ sudo cloudflared tunnel route dns vrb ebim-dashboard.aicor.dev
 sudo systemctl restart cloudflared
 ```
 
-Login needs a Bearer token — 🙋 manual:
+Login needs a Bearer token — manual operation required:
 
 ```bash
 sudo microk8s kubectl -n kube-system create token default --duration 24h
@@ -655,8 +655,8 @@ New accounts & nodes (WireGuard IPs continue after the first 4):
 > That doesn't affect the mesh — WireGuard rides external IPs, so connectivity is fine; only
 > latency to the (EU) control plane is a bit higher.
 
-Prereqs (same as Step 1): each account completes the **1.2 GPU-quota request** (🙋) and
-**1.3 gcloud login** (🙋); done in advance by the admin this round.
+Prereqs (same as Step 1): each account completes the **1.2 GPU-quota request** (manual) and
+**1.3 gcloud login** (manual); done in advance by the admin this round.
 
 ### 10.1 Create VMs (automated)
 
