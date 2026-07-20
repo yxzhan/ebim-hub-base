@@ -17,6 +17,7 @@ ARG EBIM_REPO_URL=https://github.com/EBiM-Benchmark/benchmark.git
 RUN cd ${WORKSPACE_ROOT} \
     && mv EBiM_Challenge EBiM_Challenge.orig \
     && git clone --recurse-submodules "${EBIM_REPO_URL}" EBiM_Challenge \
+    && git checkout cb5184574f33611f943ff42aae461678ccb538e9 \
     && rm -rf EBiM_Challenge/task1_isaacsim \
     && cp -a EBiM_Challenge.orig/task1_isaacsim EBiM_Challenge/ 
 
