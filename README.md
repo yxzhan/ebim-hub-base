@@ -14,6 +14,12 @@ It runs on the AICOR **VRB** (Virtual Research Building) / BinderHub platform: e
 2. Wait for the environment to start (the first launch pulls the image and can take a few minutes; later launches are faster).
 3. When it loads, you land on the **EBiM Workspace** page. **Task 3 starts automatically** once the virtual desktop is ready — give it a moment for Isaac Sim to open.
 
+
+
+https://github.com/user-attachments/assets/731c2a1a-786c-4e30-bac6-8c8850743a2d
+
+
+
 ## Controlling the robot
 
 - **Arms** — use the **ROS2 Browser** tab.
@@ -46,16 +52,6 @@ The workspace is a single page with a tab bar at the top. Each tab embeds one to
 | **VS Code** | VS Code in the browser, opened at `/workspace/EBiM_Challenge`, for reading/editing code. |
 | **JupyterLab** | A full JupyterLab session. |
 
-
-## Demo
-
-A short walkthrough — launching the lab in the browser, Task 3 (Isaac Sim) auto-starting, and controlling the robot arms:
-
-<!-- VIDEO PLACEHOLDER — embed the demo recording here (drag the mp4 into the README editor, or use a <video> tag) -->
-
-https://github.com/user-attachments/assets/393d0faa-ca2a-4d63-ad61-dfe5e86fc0b1
-
-
 ## Stress test
 
 Load-tested by launching **20 lab sessions concurrently** (each auto-starting the Task 3 Isaac Sim scene):
@@ -64,9 +60,8 @@ Load-tested by launching **20 lab sessions concurrently** (each auto-starting th
 - pod start-up **median 13.7 s** (range 11–20 s); Task 3 scene ready in ~60 s;
 - end-to-end VNC-transport round-trip **~20–24 ms** for EU clients (feels local).
 
-<!-- VIDEO PLACEHOLDER — embed the stress-test recording here -->
 
-https://github.com/user-attachments/assets/a3556e37-995f-4aaf-9d4b-0c10e64e122c
+https://github.com/user-attachments/assets/e828e0ff-f290-45e4-a4fd-73bd6d13bdb7
 
 
 ## Infrastructure & hardware
